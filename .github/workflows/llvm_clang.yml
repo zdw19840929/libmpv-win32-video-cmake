@@ -432,18 +432,32 @@ jobs:
     name: Run mpv_clang
     runs-on: ubuntu-latest
     needs: build_llvm
+
+    permissions:
+      actions: write
+
     env:
       GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      BUILD_REF: ${{ github.ref_name }}
+
     steps:
       - name: Run mpv_clang.yml
         run: |
-          curl -u shinchiro:$GH_TOKEN -X POST -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/shinchiro/mpv-winbuild-cmake/actions/workflows/mpv_clang.yml/dispatches -d @- <<EOF
-          {
-            "ref": "master",
-            "inputs": {
-              "sourceforge": "false",
-              "github_release": "false",
-              "mpv_tarball": "false"
-            }
-          }
-          EOF
+          set -euo pipefail
+
+          jq -n \
+            --arg ref "$BUILD_REF" \
+            '{
+              ref: $ref,
+              inputs: {
+                github_release: "false"
+              }
+            }' > dispatch.json
+
+          curl --fail-with-body --silent --show-error \
+            -X POST \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$GH_REPO/actions/workflows/mpv_clang.yml/dispatches" \
+            --data-binary @dispatch.json
