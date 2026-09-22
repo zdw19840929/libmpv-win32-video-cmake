@@ -4,6 +4,9 @@ ExternalProject_Add(llvm-libcxx
     DOWNLOAD_COMMAND ""
     UPDATE_COMMAND ""
     SOURCE_DIR ${LLVM_SRC}
+    PATCH_COMMAND ${CMAKE_COMMAND}
+        "-DLLVM_SOURCE_DIR=<SOURCE_DIR>"
+        -P "${CMAKE_CURRENT_LIST_DIR}/fix-libcxx-locale.cmake"
     LIST_SEPARATOR ,
     CONFIGURE_COMMAND ${EXEC} CONF=1 cmake -H<SOURCE_DIR>/runtimes -B<BINARY_DIR>
         -G Ninja
