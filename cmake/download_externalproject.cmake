@@ -1,9 +1,9 @@
-# Must match packages/cmake-0001-ExternalProject-changes.patch.
+# This version must match the ExternalProject patch.
 set(_ep_version "v3.26.4")
 
 set(_ep_root
-    "${CMAKE_CURRENT_BINARY_DIR}/externalproject-${_ep_version}")
-set(_ep_archive "${_ep_root}/modules.tar.gz")
+    "${CMAKE_CURRENT_BINARY_DIR}/externalproject-${_ep_version}-github")
+set(_ep_archive "${_ep_root}/cmake.tar.gz")
 set(_ep_stage "${_ep_root}/source")
 set(_ep_module "${_ep_stage}/Modules/ExternalProject.cmake")
 set(_ep_patch
@@ -11,7 +11,8 @@ set(_ep_patch
 set(_ep_marker "${_ep_root}/ready.txt")
 
 if(NOT EXISTS "${_ep_patch}")
-    message(FATAL_ERROR "ExternalProject patch not found: ${_ep_patch}")
+    message(FATAL_ERROR
+        "ExternalProject patch not found: ${_ep_patch}")
 endif()
 
 find_program(_ep_curl NAMES curl REQUIRED)
@@ -19,9 +20,10 @@ find_program(_ep_tar NAMES tar REQUIRED)
 find_program(_ep_patch_program NAMES patch REQUIRED)
 
 file(SHA256 "${_ep_patch}" _ep_patch_hash)
-set(_ep_signature "${_ep_version}:${_ep_patch_hash}")
+set(_ep_signature "${_ep_version}:github:${_ep_patch_hash}")
 
 set(_ep_ready FALSE)
+
 if(EXISTS "${_ep_marker}" AND EXISTS "${_ep_module}")
     file(READ "${_ep_marker}" _ep_saved_signature)
     if("${_ep_saved_signature}" STREQUAL "${_ep_signature}")
@@ -32,12 +34,13 @@ endif()
 if(NOT _ep_ready)
     file(MAKE_DIRECTORY "${_ep_root}")
 
-    # Remove only this script's staging directory, not the build directory.
+    # Clean only this script's staging directory.
     file(REMOVE_RECURSE "${_ep_stage}")
-    file(REMOVE "${_ep_marker}")
-    file(MAKE_DIRECTORY "${_ep_stage}/Modules")
+    file(REMOVE "${_ep_marker}" "${_ep_archive}")
+    file(MAKE_DIRECTORY "${_ep_stage}")
 
-    message(STATUS "Downloading CMake ${_ep_version} ExternalProject modules")
+    message(STATUS
+        "Downloading CMake ${_ep_version} from the official GitHub mirror")
 
     execute_process(
         COMMAND "${_ep_curl}"
@@ -45,7 +48,7 @@ if(NOT _ep_ready)
             --retry 5
             --connect-timeout 30
             --max-time 300
-            "https://gitlab.kitware.com/cmake/cmake/-/archive/${_ep_version}/cmake-${_ep_version}.tar.gz?path=Modules/ExternalProject"
+            "https://codeload.github.com/Kitware/CMake/tar.gz/refs/tags/${_ep_version}"
             -o "${_ep_archive}"
         RESULT_VARIABLE _ep_result
     )
@@ -53,7 +56,7 @@ if(NOT _ep_ready)
     if(NOT "${_ep_result}" STREQUAL "0")
         file(REMOVE "${_ep_archive}")
         message(FATAL_ERROR
-            "ExternalProject archive download failed: ${_ep_result}")
+            "CMake archive download failed: ${_ep_result}")
     endif()
 
     execute_process(
@@ -67,33 +70,23 @@ if(NOT _ep_ready)
     if(NOT "${_ep_result}" STREQUAL "0")
         file(REMOVE "${_ep_archive}")
         message(FATAL_ERROR
-            "ExternalProject archive extraction failed: ${_ep_result}")
+            "CMake archive extraction failed: ${_ep_result}")
     endif()
 
-    # Download the top-level module from the same version.
-    execute_process(
-        COMMAND "${_ep_curl}"
-            -fL
-            --retry 5
-            --connect-timeout 30
-            --max-time 300
-            "https://gitlab.kitware.com/cmake/cmake/-/raw/${_ep_version}/Modules/ExternalProject.cmake"
-            -o "${_ep_module}"
-        RESULT_VARIABLE _ep_result
-    )
-
-    if(NOT "${_ep_result}" STREQUAL "0")
-        file(REMOVE "${_ep_module}")
+    # The full archive already contains both the module and its templates.
+    if(NOT EXISTS "${_ep_module}")
         message(FATAL_ERROR
-            "ExternalProject.cmake download failed: ${_ep_result}")
+            "Archive is missing Modules/ExternalProject.cmake")
     endif()
 
-    if(NOT EXISTS "${_ep_stage}/Modules/ExternalProject/gitclone.cmake.in")
+    if(NOT EXISTS
+        "${_ep_stage}/Modules/ExternalProject/gitclone.cmake.in")
         message(FATAL_ERROR
             "Archive is missing Modules/ExternalProject/gitclone.cmake.in")
     endif()
 
-    # Check compatibility before changing any source files.
+    message(STATUS "Checking ExternalProject patch")
+
     execute_process(
         COMMAND "${_ep_patch_program}"
             --batch
@@ -108,7 +101,7 @@ if(NOT _ep_ready)
     if(NOT "${_ep_result}" STREQUAL "0")
         message(FATAL_ERROR
             "ExternalProject patch does not apply to ${_ep_version}. "
-            "Check that the patch and CMake version match.")
+            "Check that the patch matches this CMake version.")
     endif()
 
     execute_process(
@@ -126,6 +119,7 @@ if(NOT _ep_ready)
             "ExternalProject patch failed: ${_ep_result}")
     endif()
 
+    # Mark ready only after download, extraction and patching succeed.
     file(WRITE "${_ep_marker}" "${_ep_signature}")
 endif()
 
