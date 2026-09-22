@@ -10,6 +10,7 @@ if(POLICY CMP0135)
     cmake_policy(SET CMP0135 NEW)
 endif()
 
+
 if(NOT CMAKE_GENERATOR STREQUAL "Ninja")
     message(WARNING "Generator “${CMAKE_GENERATOR}” is unsupported!\nTry Ninja if you encounter problems.")
 endif()
