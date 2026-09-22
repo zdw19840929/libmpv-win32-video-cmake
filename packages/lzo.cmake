@@ -1,6 +1,6 @@
 ExternalProject_Add(lzo
-    URL "https://fossies.org/linux/misc/lzo-2.10.tar.gz"
-    URL_HASH SHA1=4924676a9bae5db58ef129dc1cebce3baa3c4b5d
+    URL "https://www.oberhumer.com/opensource/lzo/download/lzo-2.10.tar.gz"
+    URL_HASH SHA256=c0f892943208266f9b6543b3ae308fab6284c5c90e627931446fb49b4221a072
     DOWNLOAD_DIR ${SOURCE_LOCATION}
     UPDATE_COMMAND ""
     CONFIGURE_COMMAND ${EXEC} CONF=1 <SOURCE_DIR>/configure
