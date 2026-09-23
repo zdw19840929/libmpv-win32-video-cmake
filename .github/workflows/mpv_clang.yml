@@ -103,6 +103,10 @@ jobs:
         run: |
           set -euxo pipefail
 
+          # Recreate CMake/Ninja targets instead of reusing stale cached targets.
+          rm -rf "build_${{ matrix.bit }}"
+          rm -rf src_packages/fontconfig
+
           rm -rf \
             src_packages/openssl \
             src_packages/libudfread \
