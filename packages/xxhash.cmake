@@ -2,7 +2,8 @@ ExternalProject_Add(xxhash
     GIT_REPOSITORY https://github.com/Cyan4973/xxHash.git
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--filter=tree:0"
-    GIT_TAG dev
+    GIT_TAG v0.8.3
+    GIT_RESET v0.8.3
     UPDATE_COMMAND ""
     GIT_REMOTE_NAME origin
     CONFIGURE_COMMAND ${EXEC} CONF=1 cmake -H<SOURCE_DIR>/cmake_unofficial -B<BINARY_DIR>
