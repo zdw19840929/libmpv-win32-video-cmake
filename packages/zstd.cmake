@@ -5,6 +5,7 @@ ExternalProject_Add(zstd
     UPDATE_COMMAND ""
     GIT_REMOTE_NAME origin
     GIT_TAG v1.5.7
+    GIT_RESET v1.5.7
 
     CONFIGURE_COMMAND ${EXEC} CONF=1 cmake
         -S <SOURCE_DIR>/build/cmake
