@@ -137,14 +137,18 @@ jobs:
         run: |
           set -euo pipefail
 
-          LLVM_SRC="$PWD/src_packages/llvm"
+          LLVM_SRC="$GITHUB_WORKSPACE/src_packages/llvm"
           LLVM_TAG="llvmorg-19.1.7"
 
           if [ ! -f "$LLVM_SRC/compiler-rt/lib/builtins/CMakeLists.txt" ]; then
+            # Preserve incomplete cached sources outside src_packages.
             if [ -e "$LLVM_SRC" ]; then
-              echo "::error::LLVM source directory exists but is incomplete: $LLVM_SRC"
-              exit 1
+              BACKUP_DIR="$(mktemp -d "$RUNNER_TEMP/llvm-incomplete.XXXXXX")"
+              mv "$LLVM_SRC" "$BACKUP_DIR/llvm"
+              echo "Moved incomplete LLVM source to $BACKUP_DIR/llvm"
             fi
+
+            mkdir -p "$(dirname "$LLVM_SRC")"
 
             git clone \
               --depth 1 \
