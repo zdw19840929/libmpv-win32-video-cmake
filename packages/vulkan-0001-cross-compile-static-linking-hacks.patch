@@ -63,7 +63,7 @@ index 624192dc3..c37f31b39 100644
  
      set_target_properties(vulkan PROPERTIES
 @@ -521,7 +509,7 @@ if (BUILD_TESTS)
-     target_compile_definitions(vulkan PRIVATE SHOULD_EXPORT_TEST_FUNCTIONS)
+     add_dependencies(vulkan loader_asm_gen_files)
  endif()
  
 -if (APPLE_STATIC_LOADER)
@@ -161,9 +161,9 @@ index 9a3b9c1c9..93807ee30 100644
  #include <shlwapi.h>
  #include <direct.h>
 +#include <pthread.h> // for mingw
+ #endif  // defined(_WIN32)
  
  #include "stack_allocation.h"
- #endif  // defined(_WIN32)
  
 -#if defined(APPLE_STATIC_LOADER) && !defined(__APPLE__)
 -#error "APPLE_STATIC_LOADER can only be defined on Apple platforms!"
