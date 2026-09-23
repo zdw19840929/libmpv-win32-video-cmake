@@ -132,6 +132,29 @@ jobs:
         continue-on-error: true
         run: ${{ github.event.inputs.command }}
 
+      - name: Ensure LLVM source for compiler-rt
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          LLVM_SRC="$PWD/src_packages/llvm"
+          LLVM_TAG="llvmorg-19.1.7"
+
+          if [ ! -f "$LLVM_SRC/compiler-rt/lib/builtins/CMakeLists.txt" ]; then
+            if [ -e "$LLVM_SRC" ]; then
+              echo "::error::LLVM source directory exists but is incomplete: $LLVM_SRC"
+              exit 1
+            fi
+
+            git clone \
+              --depth 1 \
+              --branch "$LLVM_TAG" \
+              https://github.com/llvm/llvm-project.git \
+              "$LLVM_SRC"
+          fi
+
+          test -f "$LLVM_SRC/compiler-rt/lib/builtins/CMakeLists.txt"
+          
       - name: Configuring CMake & Downloading source
         run: |
           sudo chmod -R 755 ./
