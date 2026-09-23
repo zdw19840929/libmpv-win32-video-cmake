@@ -98,6 +98,31 @@ jobs:
           restore-keys: |
             ${{ secrets.CACHE_VERSION }}-clang-${{ matrix.bit }}_toolchain
 
+      - name: Clear stale dependency sources
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          rm -rf \
+            src_packages/openssl \
+            src_packages/libudfread \
+            src_packages/libdvdread \
+            src_packages/xxhash \
+            src_packages/vulkan \
+            src_packages/vulkan-header \
+            src_packages/graphengine \
+            src_packages/zimg
+
+          rm -rf \
+            build_${{ matrix.bit }}/packages/openssl-prefix \
+            build_${{ matrix.bit }}/packages/libudfread-prefix \
+            build_${{ matrix.bit }}/packages/libdvdread-prefix \
+            build_${{ matrix.bit }}/packages/xxhash-prefix \
+            build_${{ matrix.bit }}/packages/vulkan-prefix \
+            build_${{ matrix.bit }}/packages/vulkan-header-prefix \
+            build_${{ matrix.bit }}/packages/graphengine-prefix \
+            build_${{ matrix.bit }}/packages/libzimg-prefix
+
       - name: Running custom command
         if: ${{ github.event.inputs.command != '' }}
         continue-on-error: true
@@ -107,7 +132,7 @@ jobs:
         run: |
           sudo chmod -R 755 ./
           cmake -DTARGET_ARCH=${{ env.arch }}-w64-mingw32 -DCOMPILER_TOOLCHAIN=clang ${{ env.x86_64_v3_ARCH }} -DCMAKE_INSTALL_PREFIX=$PWD/clang_root -DMINGW_INSTALL_PREFIX=$PWD/build_$BIT/$BIT-w64-mingw32 -DSINGLE_SOURCE_LOCATION=$PWD/src_packages -DRUSTUP_LOCATION=$PWD/clang_root/install_rustup -DENABLE_CCACHE=ON -DCLANG_PACKAGES_LTO=ON -G Ninja --fresh -B build_$BIT -S $PWD
-          ninja -C build_$BIT download || true
+          ninja -C build_$BIT download
 
       - name: Building mpv
         id: build_mpv_step
