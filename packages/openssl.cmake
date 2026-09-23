@@ -6,6 +6,9 @@ ExternalProject_Add(openssl
     GIT_REPOSITORY https://github.com/openssl/openssl.git
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--sparse --filter=tree:0"
+    GIT_TAG openssl-3.5.8
+    GIT_RESET openssl-3.5.8
+    GIT_REMOTE_NAME origin
     GIT_CLONE_POST_COMMAND "sparse-checkout set --no-cone /* !test"
     GIT_SUBMODULES ""
     UPDATE_COMMAND ""
